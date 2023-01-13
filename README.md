@@ -1,6 +1,8 @@
+# Contract Management API
+
 ## Description
 
-This is `Yaraa's` contract management backend
+A Contract management application built with nestjs
 
 ## Installation
 
