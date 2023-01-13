@@ -6,9 +6,20 @@ import { ContractService } from "src/contract/contract.service";
 import { Component } from "src/component/models/component.entity";
 import { ContractController } from "src/contract/contract.controller";
 import { ContractType } from "src/contractType/models/contractType.entity";
+import { ClauseTemplates } from "src/clause/models/clauseFiles.entity";
+import { BusinessPartner } from "src/business-partners/entities/business-partner.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contract, ContractType, Component, Field])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Contract,
+      BusinessPartner,
+      ClauseTemplates,
+      ContractType,
+      Component,
+      Field,
+    ]),
+  ],
   providers: [ContractService],
   controllers: [ContractController],
 })

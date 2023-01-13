@@ -10,6 +10,10 @@ import {
   Controller,
   ParseIntPipe,
   ValidationPipe,
+  UseInterceptors,
+  UploadedFiles,
+  HttpException,
+  HttpStatus,
 } from "@nestjs/common";
 
 import {
@@ -19,6 +23,7 @@ import {
   ApiBearerAuth,
   ApiExtraModels,
   ApiCreatedResponse,
+  ApiConsumes,
 } from "@nestjs/swagger";
 
 import { Request } from "express";
@@ -28,9 +33,10 @@ import { PaginationMeta } from "src/shared/paginationMeta";
 import { StandardResponse } from "src/utils/responseManager";
 import { Contract } from "src/contract/models/contract.entity";
 import { ContractService } from "src/contract/contract.service";
-import { ContractQueryDto } from "src/contract/dtos/contract.dto";
+import { ContractQuery, ContractQueryDto } from "src/contract/dtos/contract.dto";
 import { CreateContractDto, QueryDto } from "src/contract/dtos/contract.dto";
 import { ApiStandardArrayResponse, ApiStandardResponse } from "src/decorators/ApiStandardResponse";
+import { FilesInterceptor } from "@nestjs/platform-express";
 
 @ApiBearerAuth()
 @ApiTags("Contract")
@@ -41,10 +47,10 @@ export class ContractController {
 
   @Get()
   @HttpCode(200)
-  @ApiStandardArrayResponse(ApiOkResponse, ContractQueryDto, "Gets all Contracts", PaginationMeta)
+  @ApiStandardArrayResponse(ApiOkResponse, ContractQueryDto, "Gets All Contracts", PaginationMeta)
   async GetAll(
     @Req() req: Request,
-    @Query() queryDto: QueryDto,
+    @Query() queryDto: ContractQuery,
   ): Promise<StandardResponse<Contract[]>> {
     // @ts-ignore
     const request = req.user;
@@ -102,5 +108,35 @@ export class ContractController {
     const request = req.user;
 
     return await this.contractService.getAllExpiringContracts(Number(request.account_id));
+  }
+
+  // Upload Contract template
+  @ApiConsumes("multipart/form-data")
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        templates: {
+          type: "array",
+          maxItems: 5,
+          items: {
+            type: "string",
+            format: "binary",
+          },
+        },
+      },
+    },
+  })
+  @Post(":contractId/upload")
+  @HttpCode(200)
+  @UseInterceptors(FilesInterceptor("templates", 5))
+  async UploadTtemplate(
+    @Req() req: Request,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Param("contractId", ParseIntPipe) contractId: number,
+  ) {
+    // @ts-ignore
+    const request = req.user;
+    return await this.contractService.uploadTemplate(Number(request.account_id), contractId, files);
   }
 }

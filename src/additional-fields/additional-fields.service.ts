@@ -1,9 +1,7 @@
 import { Guard } from "src/utils/guard";
 import { Injectable } from "@nestjs/common";
 import { Repository, UpdateResult } from "typeorm";
-import { Pagination } from "src/utils/pagination";
 import { InjectRepository } from "@nestjs/typeorm";
-import { PaginationQueryDto } from "src/shared/global.dto";
 import { Contract } from "src/contract/models/contract.entity";
 import { ResponseManager, StandardResponse } from "src/utils/responseManager";
 import { AdditionalFields } from "src/additional-fields/model/additional-fields.entity";
@@ -11,7 +9,8 @@ import {
   AdditionalFieldsCreateDto,
   AdditionalFieldsQueryDto,
   AdditionalFieldsUpdateDto,
-} from "src/aditional-fields/model/additional-fields.dto";
+} from "src/additional-fields/model/additional-fields.dto";
+import { ContractType } from "src/contractType/models/contractType.entity";
 
 @Injectable()
 export class AdditionalFieldsService {
@@ -19,11 +18,14 @@ export class AdditionalFieldsService {
     @InjectRepository(AdditionalFields)
     private readonly additionalFieldsRepository: Repository<AdditionalFields>,
     @InjectRepository(Contract) private readonly contractRepository: Repository<Contract>,
+    @InjectRepository(ContractType)
+    private readonly contractTypeRepository: Repository<ContractType>,
   ) {}
 
   async GetAll(
     contractId: number,
     accountId: number,
+    contractTypeId: number,
   ): Promise<StandardResponse<AdditionalFieldsQueryDto[]>> {
     const contract = await this.contractRepository.findOne({
       where: { id: contractId, accountId },
@@ -31,8 +33,17 @@ export class AdditionalFieldsService {
 
     Guard.AgainstNullOrUndefined(contract, "contract");
 
+    const contractType = await this.contractTypeRepository.findOne({
+      where: { id: contractTypeId, accountId },
+    });
+
+    Guard.AgainstNullOrUndefined(contractType, "contractTypeId");
+
     const additionalFields = await this.additionalFieldsRepository.find({
-      where: { contract: { id: contractId, accountId } },
+      where: {
+        contract: { id: contractId, accountId },
+        contractType: { id: contractTypeId, accountId },
+      },
     });
 
     return ResponseManager.StandardResponse(
@@ -47,6 +58,7 @@ export class AdditionalFieldsService {
     contractId: number,
     accountId: number,
     additionalFieldId: number,
+    contractTypeId: number,
   ): Promise<StandardResponse<AdditionalFieldsQueryDto>> {
     const contract = await this.contractRepository.findOne({
       where: { id: contractId, accountId },
@@ -54,9 +66,19 @@ export class AdditionalFieldsService {
 
     Guard.AgainstNullOrUndefined(contract, "contract");
 
+    const contractType = await this.contractTypeRepository.findOne({
+      where: { id: contractTypeId, accountId },
+    });
+
+    Guard.AgainstNullOrUndefined(contractType, "contractTypeId");
+
     const additionalField = await this.additionalFieldsRepository.findOne({
-      where: { id: additionalFieldId, contract: { id: contractId, accountId } },
-      relations: { contract: true },
+      where: {
+        id: additionalFieldId,
+        contract: { id: contractId, accountId },
+        contractType: { id: contractTypeId, accountId },
+      },
+      relations: { contract: true, contractType: true },
     });
 
     Guard.AgainstNullOrUndefined(

@@ -14,7 +14,7 @@ export class ClauseQueryDto {
   clauseType: string;
 
   @ApiProperty()
-  conType: ContractType;
+  contractType: ContractType;
 
   @ApiProperty()
   content: string;
@@ -29,7 +29,7 @@ export class ClauseQueryDto {
 export class ClauseCreationDto {
   @IsNumber()
   @ApiProperty()
-  conTypeId: number;
+  contractTypeId: number;
 
   @IsString()
   @ApiProperty()

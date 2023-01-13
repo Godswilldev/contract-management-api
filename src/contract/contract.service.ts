@@ -1,86 +1,84 @@
+import "dotenv/config";
+import * as AWS from "aws-sdk";
 import * as moment from "moment";
+import { Repository } from "typeorm";
 import { Guard } from "src/utils/guard";
-import { Injectable } from "@nestjs/common";
-import { Between, Repository } from "typeorm";
 import { Pagination } from "src/utils/pagination";
 import { InjectRepository } from "@nestjs/typeorm";
-import { PatchSpec } from "src/shared/patchingDto";
-import { Field } from "src/fields/models/field.entity";
-import { applyPatch, Operation } from "fast-json-patch";
-import { ContractStatus } from "src/utils/contractStatues";
 import { Contract } from "src/contract/models/contract.entity";
-import { Component } from "src/component/models/component.entity";
 import { getCorrectObject } from "src/utils/get-correct-object.utils";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { contractQueryFields } from "src/constants/contract.constants";
 import { ContractType } from "src/contractType/models/contractType.entity";
-import { CreateContractDto, QueryDto } from "src/contract/dtos/contract.dto";
+import { ContractQuery, CreateContractDto, QueryDto } from "src/contract/dtos/contract.dto";
 import { ResponseManager, StandardResponse } from "src/utils/responseManager";
+import { ClauseTemplates } from "src/clause/models/clauseFiles.entity";
+import { BusinessPartner } from "src/business-partners/entities/business-partner.entity";
+const {
+  AWS_S3_SECRET: secretAccessKey,
+  AWS_S3_ACCESS_KEY: accessKeyId,
+  AWS_S3_BUCKET_NAME: bucketName,
+  AWS_S3_REGION: region,
+} = process.env;
 
 @Injectable()
 export class ContractService {
   constructor(
     @InjectRepository(Contract) private readonly contractRepository: Repository<Contract>,
+    @InjectRepository(BusinessPartner)
+    private readonly business_partnerRepository: Repository<BusinessPartner>,
+    @InjectRepository(ClauseTemplates)
+    private readonly clauseTemplatesRepository: Repository<ClauseTemplates>,
     @InjectRepository(ContractType)
     private readonly contractTypeRepository: Repository<ContractType>,
   ) {}
 
-  async GetAllContractsByAccountId(accountId: number, queryDto: QueryDto) {
+  async GetAllContractsByAccountId(accountId: number, queryDto: ContractQuery) {
     const queryObj = { ...queryDto };
 
     delete queryObj["status"];
 
     let status = queryDto?.status?.split("&");
 
-    const query = getCorrectObject(contractQueryFields, queryObj);
-
-    const pagination = new Pagination(queryDto);
-
-    let contracts: Contract[] = [];
+    let contracts = [];
 
     if (status) {
+      // Filter by one or more status
       contracts = await this.contractRepository.find({
+        take: queryObj.take || 10,
+        skip: queryObj.take * (queryObj.page - 1) || 0,
+
         where: [
           {
             accountId,
             // @ts-ignore
             status: status[0],
           },
-          {
-            accountId,
-            // @ts-ignore
-            status: status[1],
-          },
-          {
-            accountId,
-            // @ts-ignore
-            status: status[2],
-          },
+          // {
+          //   accountId,
+          //   // @ts-ignore
+          //   status: status[1],
+          // },
+          // {
+          //   accountId,
+          //   // @ts-ignore
+          //   status: status[2],
+          // },
         ],
-        ...pagination.GetPaginationDbQuery(),
       });
     } else {
       contracts = await this.contractRepository.find({
-        where: {
-          accountId,
-          ...query,
-          ...pagination.GetPaginationDbQuery(),
-        },
+        take: queryObj.take || 10,
+        skip: queryObj.take * (queryObj.page - 1) || 0,
+        where: { accountId },
       });
     }
-
-    const total = await this.contractRepository.count({
-      where: {
-        accountId,
-        ...query,
-      },
-    });
 
     return ResponseManager.StandardResponse(
       "success",
       200,
       `${contracts.length} Contracts found`,
       contracts,
-      pagination.GetPaginationResult(total, contracts.length),
     );
   }
 
@@ -88,13 +86,13 @@ export class ContractService {
     const contract = await this.contractRepository.findOne({
       where: { id: contractId, accountId },
       relations: [
+        "business_partner",
         "contractType",
-        "clauses",
-        "fields",
-        "versions",
         "comments",
         "components",
         "addendums",
+        "clauseTemplates",
+        "additionalFields",
       ],
     });
 
@@ -114,11 +112,11 @@ export class ContractService {
     Guard.AgainstNullOrUndefined(contractType, "contract Type");
 
     const con = this.contractRepository.create({
+      ...contractCreationDto,
       contractType,
       accountId: Number(req.account_id),
       createdById: Number(req.account_id),
       modifiedById: Number(req.account_id),
-      ...contractCreationDto,
     });
 
     const contract = await this.contractRepository.save(con);
@@ -141,12 +139,41 @@ export class ContractService {
 
     Guard.AgainstNullOrUndefined(contract, "contract");
 
+    let contractType;
+    let business_partner;
+
+    if (patchDocument.contractTypeId) {
+      const ct = await this.contractTypeRepository.findOne({
+        where: { id: patchDocument?.contractTypeId, accountId: Number(req.account_id) },
+      });
+      Guard.AgainstNullOrUndefined(ct, "contractType");
+      contractType = ct;
+    } else {
+      contractType = contract.contractType;
+    }
+
+    if (patchDocument.business_partnerId) {
+      const ct = await this.business_partnerRepository.findOne({
+        where: { id: patchDocument?.business_partnerId, accountId: Number(req.account_id) },
+      });
+      Guard.AgainstNullOrUndefined(ct, "business_partner");
+      business_partner = ct;
+    } else {
+      business_partner = contract.business_partner;
+    }
+
     const savedContract = await this.contractRepository.update(
       {
         id: contractId,
         accountId: Number(req.account_id),
       },
-      { accountId: Number(req.account_id), modifiedById: Number(req.account_id), ...patchDocument },
+      {
+        contractType,
+        business_partner,
+        accountId: Number(req.account_id),
+        modifiedById: Number(req.account_id),
+        ...patchDocument,
+      },
     );
 
     return ResponseManager.StandardResponse(
@@ -170,5 +197,47 @@ export class ContractService {
       `${expiredContracts.length} Contracts found`,
       expiredContracts,
     );
+  }
+
+  async uploadTemplate(accountId: number, contractId: number, files: Express.Multer.File[]) {
+    const contract = await this.contractRepository.findOne({
+      where: { id: contractId, accountId },
+    });
+    Guard.AgainstNullOrUndefined(contract, "contract");
+
+    try {
+      const s3 = new AWS.S3({
+        credentials: {
+          accessKeyId: accessKeyId as string,
+          secretAccessKey: secretAccessKey as string,
+        },
+        region,
+      });
+
+      await Promise.all(
+        files.map(async (file, index) => {
+          const Key = `templates/clause-${Math.floor(Math.random() * 1000)}-${index}.${
+            file.originalname
+          }`;
+          const ContentType = file.mimetype;
+
+          const params = { Bucket: bucketName as string, Key, Body: file.buffer, ContentType };
+
+          const { Location } = await s3.upload(params).promise();
+
+          // save url to database
+          const uploadedfiles = this.clauseTemplatesRepository.create({
+            contract,
+            accountId,
+            filename: file.originalname,
+            fileUrl: Location,
+          });
+          await this.clauseTemplatesRepository.save(uploadedfiles);
+        }),
+      );
+      return ResponseManager.StandardResponse("success", 200, "Files Uploaded Successfully", {});
+    } catch (error) {
+      throw new HttpException("Could not Upload Files", HttpStatus.UNPROCESSABLE_ENTITY);
+    }
   }
 }

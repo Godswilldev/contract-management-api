@@ -8,6 +8,7 @@ import {
   OneToOne,
   JoinColumn,
   ManyToOne,
+  OneToMany,
 } from "typeorm";
 
 @Entity()
@@ -28,7 +29,7 @@ export class Clause {
   content: string;
 
   @ManyToOne(() => ContractType, { eager: true })
-  conType: ContractType;
+  contractType: ContractType;
 
   @CreateDateColumn()
   createdAt: Date;

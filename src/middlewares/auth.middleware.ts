@@ -12,7 +12,6 @@ export class AuthMiddleware implements NestMiddleware {
       const token = req.headers.authorization.split(" ")[1];
 
       const tokenPayLoad = TokenManager.VerifyAccessToken(token);
-
       //@ts-ignore
       req.user = tokenPayLoad;
       next();

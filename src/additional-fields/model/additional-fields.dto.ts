@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { PartialType } from "@nestjs/mapped-types";
 import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 import { Contract } from "src/contract/models/contract.entity";
+import { ContractType } from "src/contractType/models/contractType.entity";
 
 export class AdditionalFieldsCreateDto {
   @ApiProperty()
@@ -17,6 +18,11 @@ export class AdditionalFieldsCreateDto {
   @IsNumber()
   @IsNotEmpty()
   contractId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty()
+  contractTypeId: number;
 }
 
 export class AdditionalFieldsQueryDto {
@@ -31,6 +37,9 @@ export class AdditionalFieldsQueryDto {
 
   @ApiProperty()
   contract: Contract;
+
+  @ApiProperty()
+  contractType: ContractType;
 
   @ApiProperty()
   value: string;

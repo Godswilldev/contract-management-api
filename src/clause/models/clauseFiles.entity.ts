@@ -3,38 +3,36 @@ import { ContractType } from "src/contractType/models/contractType.entity";
 import {
   Column,
   Entity,
+  UpdateDateColumn,
+  CreateDateColumn,
+  PrimaryGeneratedColumn,
   OneToOne,
   JoinColumn,
-  UpdateDateColumn,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
   ManyToOne,
+  OneToMany,
 } from "typeorm";
+import { Clause } from "./clause.entity";
 
 @Entity()
-export class AdditionalFields {
+export class ClauseTemplates {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  name: string;
-
-  @Column()
+  @Column({ nullable: true })
   accountId: number;
 
-  @Column()
-  value: string;
+  @Column({ nullable: true })
+  filename: string;
+
+  @Column({ nullable: true })
+  fileUrl: string;
+
+  @ManyToOne(() => Contract, (contract) => contract.clauseTemplates)
+  contract: Contract;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @OneToOne(() => Contract, (contract) => contract.additionalFields)
-  @JoinColumn()
-  contract: Contract;
-
-  @ManyToOne(() => ContractType, { eager: true })
-  contractType: ContractType;
 }

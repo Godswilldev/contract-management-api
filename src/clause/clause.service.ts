@@ -44,7 +44,7 @@ export class ClauseService {
   async get(accountId: number, clauseId: number): Promise<StandardResponse<ClauseQueryDto>> {
     const clause = await this.clauseRepository.findOne({
       where: { accountId, id: clauseId },
-      relations: { conType: true },
+      relations: { contractType: true },
     });
 
     Guard.AgainstNullOrUndefined(
@@ -60,13 +60,13 @@ export class ClauseService {
     accountId: number,
     clauseCreationDto: ClauseCreationDto,
   ): Promise<StandardResponse<ClauseQueryDto>> {
-    const conType = await this.contractTypeRepository.findOne({
-      where: { id: clauseCreationDto.conTypeId, accountId },
+    const contractType = await this.contractTypeRepository.findOne({
+      where: { id: clauseCreationDto.contractTypeId, accountId },
     });
 
-    Guard.AgainstNullOrUndefined(conType, "contract type");
+    Guard.AgainstNullOrUndefined(contractType, "contract type");
 
-    const clause = this.clauseRepository.create({ accountId, conType, ...clauseCreationDto });
+    const clause = this.clauseRepository.create({ accountId, contractType, ...clauseCreationDto });
 
     const savedClause = await this.clauseRepository.save(clause);
 
@@ -80,17 +80,17 @@ export class ClauseService {
 
     Guard.AgainstNullOrUndefined(clause, "clause");
 
-    const conType = await this.contractTypeRepository.findOne({
-      where: { id: clauseUpdateDto.conTypeId },
+    const contractType = await this.contractTypeRepository.findOne({
+      where: { id: clauseUpdateDto.contractTypeId },
     });
 
-    Guard.AgainstNullOrUndefined(conType, "contract type");
+    Guard.AgainstNullOrUndefined(contractType, "contract type");
 
     const savedClause = await this.clauseRepository.update(
       { id: clauseId, accountId },
       {
         accountId,
-        conType,
+        contractType,
         content: clauseUpdateDto?.content,
         name: clauseUpdateDto.name,
         clauseType: clauseUpdateDto.clauseType,
