@@ -12,8 +12,6 @@ import {
   ValidationPipe,
   UseInterceptors,
   UploadedFiles,
-  HttpException,
-  HttpStatus,
 } from "@nestjs/common";
 
 import {
@@ -34,7 +32,7 @@ import { StandardResponse } from "src/utils/responseManager";
 import { Contract } from "src/contract/models/contract.entity";
 import { ContractService } from "src/contract/contract.service";
 import { ContractQuery, ContractQueryDto } from "src/contract/dtos/contract.dto";
-import { CreateContractDto, QueryDto } from "src/contract/dtos/contract.dto";
+import { CreateContractDto } from "src/contract/dtos/contract.dto";
 import { ApiStandardArrayResponse, ApiStandardResponse } from "src/decorators/ApiStandardResponse";
 import { FilesInterceptor } from "@nestjs/platform-express";
 

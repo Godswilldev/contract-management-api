@@ -3,16 +3,13 @@ import * as AWS from "aws-sdk";
 import * as moment from "moment";
 import { Repository } from "typeorm";
 import { Guard } from "src/utils/guard";
-import { Pagination } from "src/utils/pagination";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Contract } from "src/contract/models/contract.entity";
-import { getCorrectObject } from "src/utils/get-correct-object.utils";
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { contractQueryFields } from "src/constants/contract.constants";
-import { ContractType } from "src/contractType/models/contractType.entity";
-import { ContractQuery, CreateContractDto, QueryDto } from "src/contract/dtos/contract.dto";
-import { ResponseManager, StandardResponse } from "src/utils/responseManager";
 import { ClauseTemplates } from "src/clause/models/clauseFiles.entity";
+import { ContractType } from "src/contractType/models/contractType.entity";
+import { ResponseManager, StandardResponse } from "src/utils/responseManager";
+import { ContractQuery, CreateContractDto } from "src/contract/dtos/contract.dto";
 import { BusinessPartner } from "src/business-partners/entities/business-partner.entity";
 const {
   AWS_S3_SECRET: secretAccessKey,
