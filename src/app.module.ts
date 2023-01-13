@@ -35,7 +35,7 @@ import { BusinessPartner } from "src/business-partners/entities/business-partner
       database: process.env.DATABASE_NAME,
       // set to false when in production
       synchronize: true,
-      logging: process.env.NODE_ENV === "development",
+      logging: false,
       entities: [
         Field,
         Clause,
