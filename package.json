@@ -9,17 +9,19 @@
     "node": ">=16.0"
   },
   "scripts": {
-    "backend:install": "npm i",
+    "prebuild": "rimraf dist",
     "build": "nest build",
-    "prebuild": "mkdir node_modules",
-    "predeploy": "npm install --omit=dev",
-    "deploy": "rm -rf dist && eb use con-mgt-env && eb deploy --profile default --timeout 30",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "rm -rf dist && nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@automapper/classes": "^8.3.7",
