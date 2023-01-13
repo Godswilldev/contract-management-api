@@ -7,6 +7,7 @@ import { CommentQueryDto } from "src/comment/models/comment.dto";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { ComponentQueryDto } from "src/component/models/component.dto";
 import { ContractTypeQueryDto } from "src/contractType/dtos/contractType.dto";
+import { BusinessPartnerQueryDto } from "src/business-partners/dto/business-partner.dto";
 import { AdditionalFieldsQueryDto } from "src/additional-fields/model/additional-fields.dto";
 import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
@@ -77,6 +78,10 @@ export class CreateContractDto {
   @IsNotEmpty()
   @IsNumber()
   contractTypeId: number;
+
+  @ApiProperty()
+  @IsNumber()
+  business_partnerId: number;
 }
 
 export class ContractQueryDto {
@@ -141,6 +146,9 @@ export class ContractQueryDto {
   contractType: ContractTypeQueryDto;
 
   @ApiProperty()
+  business_partner: BusinessPartnerQueryDto;
+
+  @ApiProperty()
   fields: FieldQueryDto[];
 
   @ApiProperty()
@@ -161,4 +169,19 @@ export class QueryDto extends PaginationQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   status: ContractStatus;
+}
+
+export class ContractQuery {
+  @IsString()
+  @ApiPropertyOptional()
+  @IsOptional()
+  status: ContractStatus;
+
+  @IsNumber()
+  @ApiPropertyOptional()
+  page: number;
+
+  @IsNumber()
+  @ApiPropertyOptional()
+  take: number;
 }

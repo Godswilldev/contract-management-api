@@ -19,6 +19,8 @@ import {
   ManyToOne,
 } from "typeorm";
 import { AdditionalFields } from "src/additional-fields/model/additional-fields.entity";
+import { ClauseTemplates } from "src/clause/models/clauseFiles.entity";
+import { BusinessPartner } from "src/business-partners/entities/business-partner.entity";
 
 @Entity()
 export class Contract {
@@ -89,8 +91,14 @@ export class Contract {
   @ManyToOne(() => ContractType, { eager: true })
   contractType: ContractType;
 
+  @ManyToOne(() => BusinessPartner, { eager: true })
+  business_partner: BusinessPartner;
+
   @OneToMany(() => Component, (component) => component.contract)
   components: Component[];
+
+  @OneToMany(() => ClauseTemplates, (clauseTemplate) => clauseTemplate.contract)
+  clauseTemplates: ClauseTemplates[];
 
   @OneToMany(() => Comment, (comment) => comment.contract)
   comments: Comment[];

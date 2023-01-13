@@ -4,7 +4,6 @@ import {
   Body,
   Post,
   Param,
-  Query,
   Patch,
   Delete,
   HttpCode,
@@ -36,7 +35,7 @@ import {
 
 @ApiBearerAuth()
 @ApiTags("Contract Additional Fields")
-@Controller("additional-fields/:contractId")
+@Controller("additional-fields/:contractId/:contractTypeId")
 @ApiExtraModels(PaginationMeta, StandardResponse, AdditionalFieldsQueryDto, PaginationQueryDto)
 export class AdditionalFieldsController {
   constructor(private readonly additionalFieldsService: AdditionalFieldsService) {}
@@ -46,11 +45,12 @@ export class AdditionalFieldsController {
   @ApiStandardArrayResponse(ApiOkResponse, AdditionalFieldsQueryDto, "Gets all Additional Fields")
   async GetAll(
     @Param("contractId", ParseIntPipe) contractId: number,
+    @Param("contractTypeId", ParseIntPipe) contractTypeId: number,
     @Req() req: Request,
   ): Promise<StandardResponse<AdditionalFieldsQueryDto[]>> {
     // @ts-ignore
     const accountId = req.user.account_id;
-    return await this.additionalFieldsService.GetAll(contractId, Number(accountId));
+    return await this.additionalFieldsService.GetAll(contractId, Number(accountId), contractTypeId);
   }
 
   @HttpCode(200)
@@ -58,12 +58,18 @@ export class AdditionalFieldsController {
   @ApiStandardArrayResponse(ApiOkResponse, AdditionalFieldsQueryDto, "Gets One Additional Field")
   async Get(
     @Param("contractId", ParseIntPipe) contractId: number,
+    @Param("contractTypeId", ParseIntPipe) contractTypeId: number,
     @Param("additionalFieldId", ParseIntPipe) additionalFieldId: number,
     @Req() req: Request,
   ): Promise<StandardResponse<AdditionalFieldsQueryDto>> {
     // @ts-ignore
     const accountId = req.user.account_id;
-    return await this.additionalFieldsService.Get(contractId, Number(accountId), additionalFieldId);
+    return await this.additionalFieldsService.Get(
+      contractId,
+      Number(accountId),
+      additionalFieldId,
+      contractTypeId,
+    );
   }
 
   @Post()

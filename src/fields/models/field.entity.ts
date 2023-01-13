@@ -1,6 +1,8 @@
+import { ContractType } from "src/contractType/models/contractType.entity";
 import {
   Column,
   Entity,
+  ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
@@ -11,19 +13,19 @@ export class Field {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   accountId: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   name: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   label: string;
 
-  @Column({ nullable: false })
-  type: string;
+  @ManyToOne(() => ContractType, { eager: true })
+  contractType: ContractType;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   status: string;
 
   @CreateDateColumn({ nullable: true })

@@ -7,10 +7,15 @@ import { Field } from "src/fields/models/field.entity";
 import { PaginationQueryDto } from "src/shared/global.dto";
 import { ResponseManager, StandardResponse } from "src/utils/responseManager";
 import { FieldQueryDto, FieldCreationDto, FieldUpdateDto } from "src/fields/models/field.dto";
+import { ContractType } from "src/contractType/models/contractType.entity";
 
 @Injectable()
 export class FieldService {
-  constructor(@InjectRepository(Field) private readonly fieldRepository: Repository<Field>) {}
+  constructor(
+    @InjectRepository(Field) private readonly fieldRepository: Repository<Field>,
+    @InjectRepository(ContractType)
+    private readonly contractTypeRepository: Repository<ContractType>,
+  ) {}
 
   async getAll(
     accountId: number,
@@ -55,7 +60,25 @@ export class FieldService {
     accountId: number,
     fieldCreationDto: FieldCreationDto,
   ): Promise<StandardResponse<FieldQueryDto>> {
-    const field = this.fieldRepository.create({ accountId, ...fieldCreationDto });
+    const contractType = await this.contractTypeRepository.findOne({
+      where: { id: fieldCreationDto.contractTypeId },
+    });
+
+    Guard.AgainstNullOrUndefined(
+      contractType,
+      "contractType",
+      ResponseManager.NotFoundResponse("contractType not found", {
+        contractTypeId: fieldCreationDto.contractTypeId,
+      }),
+    );
+
+    const field = this.fieldRepository.create({
+      accountId,
+      contractType,
+      name: fieldCreationDto?.name,
+      label: fieldCreationDto?.label,
+      status: fieldCreationDto?.status,
+    });
 
     const savedfield = await this.fieldRepository.save(field);
 
@@ -89,8 +112,8 @@ export class FieldService {
   }
 }
 
-interface AdditionalFields<T> {
-  name: string;
-  type: T;
-  value: string;
-}
+// interface AdditionalFields<T> {
+//   name: string;
+//   type: T;
+//   value: string;
+// }

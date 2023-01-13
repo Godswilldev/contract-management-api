@@ -15,11 +15,14 @@ import { ComponentModule } from "src/component/component.module";
 import { AuthMiddleware } from "src/middlewares/auth.middleware";
 import { Component } from "src/component/models/component.entity";
 import { RouteLogger } from "src/middlewares/routelogger.middleware";
+import { ClauseTemplates } from "src/clause/models/clauseFiles.entity";
 import { ContractTypeModule } from "src/contractType/contractType.module";
 import { ContractType } from "src/contractType/models/contractType.entity";
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
 import { AdditionalFields } from "src/additional-fields/model/additional-fields.entity";
 import { AdditionalFieldsModule } from "src/additional-fields/additional-fields.module";
+import { BusinessPartnersModule } from "src/business-partners/business-partners.module";
+import { BusinessPartner } from "src/business-partners/entities/business-partner.entity";
 
 @Module({
   imports: [
@@ -42,6 +45,8 @@ import { AdditionalFieldsModule } from "src/additional-fields/additional-fields.
         Component,
         ContractType,
         AdditionalFields,
+        ClauseTemplates,
+        BusinessPartner,
       ],
     }),
     FieldModule,
@@ -53,45 +58,50 @@ import { AdditionalFieldsModule } from "src/additional-fields/additional-fields.
     ComponentModule,
     ContractTypeModule,
     AdditionalFieldsModule,
+    BusinessPartnersModule,
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(RouteLogger).forRoutes("*").apply(AuthMiddleware).forRoutes(
       {
-        path: "fields",
+        path: "fields*",
         method: RequestMethod.ALL,
       },
       {
-        path: "clause",
+        path: "clause*",
         method: RequestMethod.ALL,
       },
       {
-        path: "comment",
+        path: "comment*",
         method: RequestMethod.ALL,
       },
       {
-        path: "addendum",
+        path: "addendum*",
         method: RequestMethod.ALL,
       },
       {
-        path: "contract",
+        path: "contract*",
         method: RequestMethod.ALL,
       },
       {
-        path: "dashboard",
+        path: "dashboard*",
         method: RequestMethod.ALL,
       },
       {
-        path: "component",
+        path: "component*",
         method: RequestMethod.ALL,
       },
       {
-        path: "contractType",
+        path: "contractType*",
         method: RequestMethod.ALL,
       },
       {
-        path: "additional-fields",
+        path: "additional-fields*",
+        method: RequestMethod.ALL,
+      },
+      {
+        path: "business-partners*",
         method: RequestMethod.ALL,
       },
     );
