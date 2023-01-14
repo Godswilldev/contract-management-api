@@ -24,15 +24,28 @@ import { AdditionalFieldsModule } from "src/additional-fields/additional-fields.
 import { BusinessPartnersModule } from "src/business-partners/business-partners.module";
 import { BusinessPartner } from "src/business-partners/entities/business-partner.entity";
 
+const {
+  AWS_RDS_PASSWORD,
+  AWS_RDS_HOST,
+  AWS_RDS_USER,
+  AWS_RDS_NAME,
+  DATABASE_HOST,
+  DATABASE_PORT,
+  DATABASE_USER,
+  DATABASE_PASSWORD,
+  DATABASE_NAME,
+  NODE_ENV,
+} = process.env;
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: "mysql",
-      host: process.env.DATABASE_HOST,
-      port: Number(process.env.DATABASE_PORT),
-      username: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASSWORD,
-      database: process.env.DATABASE_NAME,
+      host: NODE_ENV === "development" ? DATABASE_HOST : AWS_RDS_HOST,
+      port: Number(DATABASE_PORT),
+      username: NODE_ENV === "development" ? DATABASE_USER : AWS_RDS_USER,
+      password: NODE_ENV === "development" ? DATABASE_PASSWORD : AWS_RDS_PASSWORD,
+      database: NODE_ENV === "development" ? DATABASE_NAME : AWS_RDS_NAME,
       // set to false when in production
       synchronize: true,
       logging: false,
