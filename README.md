@@ -3,7 +3,7 @@
 ## Description
 
 A Contract management application built with nestjs.
-Contract Management Backend API. To automate the lifecycle of a contract between two parties. (From creation to execution).
+Contract Management Backend API. To automate the lifecycle of a contract between two or more parties. (From creation to execution).
 
 ## Installation
 
